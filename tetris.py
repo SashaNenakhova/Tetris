@@ -42,9 +42,6 @@ def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
 
         left_corner = (screen_dimensions[1])//2 - 36
         top_corner = (screen_dimensions[0])//2 - 14
-        # maxyx=current_terminal_size
-        # maxx=int(maxyx[1]/2-38) # по горизонтали ## min 55
-        # maxy=int(maxyx[0]/2-16) # по вертикали ## min 23
 
 
         scene = copy.deepcopy(m)
@@ -248,10 +245,10 @@ def full_drop(m, current_figure, drop_x, drop_y):
 ### MAIN LOOP #########################################################################
 
 def play_tetris(stdscr):
-    global maxx
-    global maxy
+    global ttop
     global current_terminal_size
     global speed
+    global screen_dimensions
 
     stdscr.clear()
 
@@ -267,8 +264,6 @@ def play_tetris(stdscr):
 
         matrix =[[0 for x in range(12)] for x in range(20)]
         matrix = create_borders(matrix)
-
-        #scene = [[0 for x in range(12)] for x in range(20)]
 
         figures=[[[0,0,0],
                   [2,2,2],
@@ -330,9 +325,7 @@ def play_tetris(stdscr):
                 elif key == curses.KEY_DOWN:
                     # stdscr.addstr("DOWN    ")
                     x=full_drop(matrix, current_figure, temp_x, temp_y)
-                    #t=datetime.datetime.now()
-
-                    
+   
                 elif key == curses.KEY_LEFT:
                     # stdscr.addstr("LEFT     ")
                     if move_figure(matrix, current_figure,temp_x, temp_y-1)==True:
@@ -348,17 +341,12 @@ def play_tetris(stdscr):
                 elif key == ord('p'):
                     stdscr.nodelay(False)
 
-
-                    box2 = curses.newwin(3, 10, maxy+12, maxx+36)
+                    box2 = curses.newwin(3, 10, current_terminal_size[0]//2, current_terminal_size[1]//2)
                     box2.box()
                     box2.bkgd(' ', curses.color_pair(13))    
 
                     box2.addstr(1, 2, 'Paused', curses.color_pair(13))
                     box2.refresh()
-
-
-                    # stdscr.addstr('Paused', curses.color_pair(13))
-                    # stdscr.refresh()
 
                     key=stdscr.getch()
                     while key!=ord('p'):
@@ -395,10 +383,13 @@ def play_tetris(stdscr):
                         current_figure=next_figure
                         next_figure=figures[random.randint(0, len(figures)-1)]
 
-                        if move_figure(matrix, current_figure, x, y)==False: ### GAME OVER
+                        if move_figure(matrix, current_figure, x, y)==False:       ### GAME OVER #############################################################
                             
+                            left_corner = (screen_dimensions[1])//2 - 36
+                            top_corner = (screen_dimensions[0])//2 - 14
 
-                            box1 = curses.newwin(6, 21, maxy+10, maxx+28)
+
+                            box1 = curses.newwin(6, 21, top_corner+10, left_corner+28)
                             box1.box()
                             box1.bkgd(' ', curses.color_pair(50))    
 
@@ -406,6 +397,18 @@ def play_tetris(stdscr):
                             box1.addstr(3, 1, 'Type "y" to restart')
                             box1.addstr(4, 3, 'or "n" to quit')
                             box1.refresh()
+
+                            if count_lines>=min(ttop.keys()):
+                                box2 = curses.newwin(6, 20, top_corner+25, left_corner+28)
+                                box2.box()
+                                box2.bkgd(' ', curses.color_pair(50))    
+
+
+                                box2.addstr(1, 6, 'You have achieved the high score!', curses.color_pair(50))
+                                box2.refresh()
+                                name='Player-----------------16' ##input('Type your name:')
+
+                                append_record(name)
 
 
                             break
@@ -423,6 +426,7 @@ def play_tetris(stdscr):
 
         if quit==True:
             quit=False
+            stdscr.clear()
             break
 
         stdscr.nodelay(False)
@@ -478,10 +482,84 @@ def play_tetris(stdscr):
 
 ########### MENU ##########################################################################
 
+def append_record(result_str): # записывает рекорд\
+    global ttop
+    global count_lines
+
+    record='\n'+result_str
+
+    if len(ttop.keys())<10:
+        results_file=open('file.py', 'a')
+        results_file.write(record)
+
+
+    else: # удаляется меньший рекорд, файл перезаписывается
+
+        results_file=open('file.py', 'w') ## файл очищается
+        results_file.write('')
+        results_file.close()
+
+        results_file=open('file.py', 'a')
+        for j in ttop.keys():
+            for i in ttop[j]:        ## файл перезаписывается
+                results_file.write[i]
+        results_file.write(record) ## добавляется новый рекорд
+
+        
+
+
+    results_file.close()
+    ttop=update_ttop()   ### сортировка!!!
+
+
+
+def clear_records(): # сбрасывает рекорды
+    global ttop
+    results_file=open('file.py', 'w')
+    results_file.write('')
+    ttop={}
+
+    results_file.close()
+
+
+def update_ttop(): # обновляет список ttop 
+    f_ttop={}
+
+    ### open file
+    results_file = open('file.py', 'r')
+    results_list=results_file.read().split('\n')
+
+    ### making dictionary
+    for i in results_list:
+        j=i.split(';') # ключ/кол-во линий
+        if j!=['']:
+            f_ttop[int(j[1])]=j
+
+    ### sorting
+    sorting=sorted(f_ttop.keys(), reverse=True)
+    new_ttop={}
+    for i in range(len(f_ttop)):
+        for j in sorting:
+            new_ttop[j]=f_ttop[j]
+
+
+    results_file.close()
+    return new_ttop
+
+
+
+
+
+
+
+
 def render_results(screen_results, res_num, res_lst):
     global screen_dimensions
     global ttop
-
+    
+    keys=[]
+    for i in ttop.keys():
+        keys.append(i)
     has_screen_changed(screen_results)
     
     left_corner = (screen_dimensions[1]) // 2 - 14
@@ -491,9 +569,10 @@ def render_results(screen_results, res_num, res_lst):
 
     # выводим список рекордов
     for i in range(1, len(ttop)+1):
-        screen_results.addstr(top_corner+2*i, left_corner+2, str(i)+' '+ttop[i][0])
-        screen_results.addstr(top_corner+2*i, left_corner+4+len(ttop[i][0]), '-'*((24-len(ttop[i][0]))+3))
-        screen_results.addstr(top_corner+2*i, left_corner+4+24+3-len(ttop[i][1]), str(ttop[i][1]))
+        j=keys[i-1]
+        screen_results.addstr(top_corner+2*i, left_corner+2, str(i)+' '+ttop[j][0])
+        screen_results.addstr(top_corner+2*i, left_corner+4+len(ttop[j][0])-1+len(str(i)), '-'*((24-len(ttop[j][0])+1-len(str(i)))+3))
+        screen_results.addstr(top_corner+2*i, left_corner+4+24+3-len(ttop[j][1]), str(ttop[j][1]))
     # back, clear results 
     for i in range(2):
         if res_num==i:
@@ -519,7 +598,6 @@ def display_results(screen_results):
     res_lst=[' Back ', ' Clear results ']
 
   
-    #screen_results.nodelay(False)
 
     screen_results.clear()
 
@@ -538,9 +616,9 @@ def display_results(screen_results):
                 screen_results.clear()
                 screen_results.nodelay(True)
                 return
-            elif res_num==1: # clear
+            elif res_num==1: ######################### clear
                 screen_results.clear()
-                #screen_results.addstr(top_corner, left_corner, '  Top results')
+
                 ttop={}
 
         if res_num==-1:
@@ -578,9 +656,10 @@ def render_menu(num, lst, screen):
 
 
 def start_menu(screen):
-
     global screen_dimensions
+    global ttop
 
+    ttop=update_ttop()
 
     curses.start_color()
     curses.init_pair(112, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -613,28 +692,16 @@ def start_menu(screen):
             if num==3: # exit
                 break
             elif num==1: # start
-                #screen.addstr(maxy, maxx, ('  '*10+'\n')*16)
                 play_tetris(screen)
 
             else: # top results
                 display_results(screen)  
-                #screen.clear()
 
 
         render_menu(num, lst, screen)
 
 
-ttop={ 1: ['Name', str(123)], 
-        2: ['Name2',str(43)],
-        3: ['Name3',str(10)],
-        4: ['Name4',str(68)],
-        5: ['Name',str(123)], 
-        6: ['Name2',str(43)],
-        7: ['Name3',str(10)],
-        8: ['Name4',str(68)],
-        9: ['Name3',str(10)],
-        10: ['Name4',str(68)]
-        }
+
 
 curses.wrapper(start_menu)
 
