@@ -26,26 +26,25 @@ def create_borders(m):
 def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
     global next_figure
     global count_lines
-    global maxx
-    global maxy
-    global current_terminal_size
+    global screen_dimensions
 
     stdscr=sdr
-
     stdscr.move(0,0)
 
-    if current_terminal_size != stdscr.getmaxyx():
-        stdscr.clear()
-        current_terminal_size = stdscr.getmaxyx()
+    stdscr.addstr(1, 0, str(screen_dimensions))
+    has_screen_changed(stdscr)
+
     
-    if current_terminal_size[0]<23 or current_terminal_size[1]<55:
-        stdscr.move(current_terminal_size[0]//2, current_terminal_size[1]//2)
+    if screen_dimensions[0]<23 or screen_dimensions[1]<55:
+        stdscr.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
         stdscr.addstr('Error', curses.color_pair(50))
     else:
 
-        maxyx=current_terminal_size
-        maxx=int(maxyx[1]/2-38) # по горизонтали ## min 55
-        maxy=int(maxyx[0]/2-16) # по вертикали ## min 23
+        left_corner = (screen_dimensions[1])//2 - 36
+        top_corner = (screen_dimensions[0])//2 - 14
+        # maxyx=current_terminal_size
+        # maxx=int(maxyx[1]/2-38) # по горизонтали ## min 55
+        # maxy=int(maxyx[0]/2-16) # по вертикали ## min 23
 
 
         scene = copy.deepcopy(m)
@@ -81,7 +80,7 @@ def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
         for i in range(len(scene)):
             for j in range(len(scene[i])):
 
-                    stdscr.move(maxy+5+i, maxx+10+j*2)
+                    stdscr.move(top_corner+5+i, left_corner+10+j*2)
                     if scene[i][j]==1:
                         stdscr.addstr('  ', curses.color_pair(1))
                     elif scene[i][j]==2:
@@ -102,17 +101,17 @@ def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
                         stdscr.addstr('  ', curses.color_pair(10))
 
         # next figure
-        stdscr.move(maxy+5, maxx+50)
+        stdscr.move(top_corner+5, left_corner+50)
         stdscr.addstr('Next figure: ', curses.color_pair(12))
 
         for i in range(4): 
             for j in range(4):
-                stdscr.move(maxy+8+i, maxx+53+j*2)
+                stdscr.move(top_corner+8+i, left_corner+53+j*2)
                 stdscr.addstr('  ', curses.color_pair(10))
                 
         for i in range(len(next_figure)): 
             for j in range(len(next_figure[i])):
-                    stdscr.move(maxy+8+i, maxx+53+j*2)
+                    stdscr.move(top_corner+8+i, left_corner+53+j*2)
                     if next_figure[i][j]==1:
                         stdscr.addstr('  ', curses.color_pair(1))
                     elif next_figure[i][j]==2:
@@ -133,12 +132,37 @@ def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
                         stdscr.addstr('  ', curses.color_pair(10))
 
         # lines
-        stdscr.move(maxy+15, maxx+52)
+        stdscr.move(top_corner+15, left_corner+52)
         stdscr.addstr('Lines: '+str(count_lines), curses.color_pair(11))
 
 
 
     stdscr.refresh()
+
+
+
+
+
+
+
+def has_screen_changed(screen):
+    # Функция проверяет, изменился ли размер экрана, и, если да, очищает экран. 
+    # Вызывающие функции должны подразумевать, что экран может быть очищен после вызова этой функции
+
+    global screen_dimensions
+
+    current_dimensions = screen.getmaxyx()
+
+    if screen_dimensions != current_dimensions:
+        screen_dimensions = current_dimensions
+        screen.clear()
+
+    while screen.getmaxyx()[0]<23 or screen.getmaxyx()[1]<55:
+        screen.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
+        screen.addstr('Error', curses.color_pair(50))
+        screen.refresh()
+
+
 
 
 
@@ -229,7 +253,6 @@ def play_tetris(stdscr):
     global current_terminal_size
     global speed
 
-    current_terminal_size=stdscr.getmaxyx()
     stdscr.clear()
 
     nodelay=True
@@ -289,6 +312,7 @@ def play_tetris(stdscr):
         curses.start_color()
 
         while True:
+            current_terminal_size=stdscr.getmaxyx()
 
             if current_terminal_size[0]>=23 and current_terminal_size[1]>=55:                
 
@@ -455,47 +479,47 @@ def play_tetris(stdscr):
 ########### MENU ##########################################################################
 
 def render_results(screen_results, res_num, res_lst):
-    global maxy
-    global maxx
-    global topp
+    global screen_dimensions
+    global ttop
 
-    maxyx=[maxy, maxx]
-    cur_screen_size=screen_results.getmaxyx()
-    if cur_screen_size!=maxyx:
-        maxyx=cur_screen_size
-        screen_results.clear()
-        maxx=int(maxyx[1]/2) -7
-        maxy=int(maxyx[0]/2)
+    has_screen_changed(screen_results)
+    
+    left_corner = (screen_dimensions[1]) // 2 - 14
+    top_corner = (screen_dimensions[0]) // 2 - 12
 
-    screen_results.addstr(maxy-5, maxx, '  Top results')
+    screen_results.addstr(top_corner, left_corner+8, '  Top results')
 
+    # выводим список рекордов
     for i in range(1, len(ttop)+1):
-        screen_results.addstr(maxy-5+2*i, maxx, str(i)+ttop[i])
-
+        screen_results.addstr(top_corner+2*i, left_corner+2, str(i)+' '+ttop[i][0])
+        screen_results.addstr(top_corner+2*i, left_corner+4+len(ttop[i][0]), '-'*((24-len(ttop[i][0]))+3))
+        screen_results.addstr(top_corner+2*i, left_corner+4+24+3-len(ttop[i][1]), str(ttop[i][1]))
+    # back, clear results 
     for i in range(2):
         if res_num==i:
-            screen_results.addstr(maxy+2*len(ttop), maxx-10+23*i, res_lst[i], curses.color_pair(112))
+            # выбранная кнопка
+            screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i], curses.color_pair(112))
         else:
-            screen_results.addstr(maxy+2*len(ttop), maxx-10+23*i, res_lst[i])
+            screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i])
 
     screen_results.refresh()
 
 
 def display_results(screen_results):
-
-    global maxy
-    global maxx 
-
     global ttop
+    global screen_dimensions
+
+    has_screen_changed(screen_results)
+
+    left_corner = (screen_dimensions[1]) // 2 - 10
+    top_corner = (screen_dimensions[0]) // 2 - 23
+
 
     res_num=0
     res_lst=[' Back ', ' Clear results ']
 
-    screen_results.addstr(maxy-5, maxx, ('  '*10+'\n')*len(ttop)*4)
   
-
-
-    screen_results.nodelay(False)
+    #screen_results.nodelay(False)
 
     screen_results.clear()
 
@@ -511,14 +535,12 @@ def display_results(screen_results):
             res_num-=1
         elif key == curses.KEY_ENTER or key == 10 or key == 13:
             if res_num==0: # back
-                res_enter=False
                 screen_results.clear()
                 screen_results.nodelay(True)
                 return
             elif res_num==1: # clear
-                res_enter=False
                 screen_results.clear()
-                screen_results.addstr(maxy-5, maxx, '  Top results')
+                #screen_results.addstr(top_corner, left_corner, '  Top results')
                 ttop={}
 
         if res_num==-1:
@@ -538,33 +560,26 @@ def display_results(screen_results):
 
 
 def render_menu(num, lst, screen):
-    global maxy
-    global maxx
+    global screen_dimensions
 
-    maxyx=[maxy, maxx]
-    cur_screen_size=screen.getmaxyx()
-    if cur_screen_size!=maxyx:
-        maxyx=cur_screen_size
-        screen.clear()
-        maxx=int(maxyx[1]/2) -7
-        maxy=int(maxyx[0]/2)
+    has_screen_changed(screen)
 
-
+    left_corner = (screen_dimensions[1]-14) // 2
+    top_corner = (screen_dimensions[0] - 7) // 2
 
     for i in range(4):
         if num==i and num!=0:
-            screen.addstr(maxy-5+3*i, maxx, lst[i], curses.color_pair(112))
+            screen.addstr(top_corner + i*2, left_corner, lst[i], curses.color_pair(112))
         else:
-            screen.addstr(maxy-5+3*i, maxx, lst[i])
+            screen.addstr(top_corner + i*2, left_corner, lst[i])
 
     screen.refresh()
 
 
 
 def start_menu(screen):
-    global maxy
-    global maxx
 
+    global screen_dimensions
 
 
     curses.start_color()
@@ -573,25 +588,14 @@ def start_menu(screen):
 
     screen.nodelay(True)
 
+    screen_dimensions = screen.getmaxyx()
 
-    maxyx=screen.getmaxyx()
-    maxx=int(maxyx[1]/2) -7
-    maxy=int(maxyx[0]/2)
 
     lst=['    TETRIS', 'Start new game', ' Top results  ', '     Exit     ']
     num=1
 
 
-    while True:
-
-        cur_screen_size=screen.getmaxyx()
-
-        if cur_screen_size!=maxyx:
-            maxyx=cur_screen_size
-            screen.clear()
-            maxx=int(maxyx[1]/2) -7
-            maxy=int(maxyx[0]/2) 
-            
+    while True:    
 
         key=screen.getch()
 
@@ -609,25 +613,27 @@ def start_menu(screen):
             if num==3: # exit
                 break
             elif num==1: # start
-                screen.addstr(maxy, maxx, ('  '*10+'\n')*16)
+                #screen.addstr(maxy, maxx, ('  '*10+'\n')*16)
                 play_tetris(screen)
 
             else: # top results
                 display_results(screen)  
-                screen.clear()
+                #screen.clear()
 
 
         render_menu(num, lst, screen)
 
 
-ttop={ 1: ' - '+'Name'+' - '+str(123), 
-        2: ' - '+'Name2'+' - '+str(43),
-        3: ' - '+'Name3'+' - '+str(10),
-        4: ' - '+'Name4'+' - '+str(68),
-        5: ' - '+'Name'+' - '+str(123), 
-        6: ' - '+'Name2'+' - '+str(43),
-        7: ' - '+'Name3'+' - '+str(10),
-        8: ' - '+'Name4'+' - '+str(68)
+ttop={ 1: ['Name', str(123)], 
+        2: ['Name2',str(43)],
+        3: ['Name3',str(10)],
+        4: ['Name4',str(68)],
+        5: ['Name',str(123)], 
+        6: ['Name2',str(43)],
+        7: ['Name3',str(10)],
+        8: ['Name4',str(68)],
+        9: ['Name3',str(10)],
+        10: ['Name4',str(68)]
         }
 
 curses.wrapper(start_menu)
