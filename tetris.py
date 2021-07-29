@@ -460,6 +460,49 @@ def play_tetris(stdscr):
 
 
 
+############### RECORDS ######################################################
+
+
+array = []
+
+try:
+    ## чтение файла
+    array = read_file('test_records.txt')
+
+
+    record = ['Lena'+str(datetime.datetime.now()), random.randint(0, 20)]
+
+
+    array=adding_record(array, record)
+
+    print(array, 'array')
+
+    ## добавление строк в файл
+    update_file('test_records.txt', array)
+ 
+
+    ### чтение измененного файла
+    read_file('test_records.txt')
+
+
+except FileNotFoundError:
+    ## создание файла
+
+    array = [['Vasya', 7],
+             ['Petya', 8],
+             ['Olya', 9],
+             ['Masha', 10]
+             ]
+
+    array.sort(key=lambda record:record[1])
+    array=array[::-1]
+
+    ## добавление строк в файл
+    update_file('test_records.txt', array)
+
+
+    ### чтение измененного файла
+    read_file('test_records.txt')#,'file created')
 
 
 
@@ -468,21 +511,11 @@ def play_tetris(stdscr):
 
 
 
+### СТАРЫЕ ФУНКЦИИ #####################################################
 
 
 
-
-
-
-
-
-
-
-
-
-########### MENU ##########################################################################
-
-def append_record(result_str): # записывает рекорд\
+def append_record(result_str): # записывает рекорд
     global ttop
     global count_lines
 
@@ -547,9 +580,64 @@ def update_ttop(): # обновляет список ttop
     return new_ttop
 
 
+###### NEW RECORDS ##################################################
+
+##### updating file
+def update_file(file, array):
+    f = open(file, 'w', newline=None)
+    strings = []
+
+    for i in array: ## списки из array формируются в список строк
+        if len(i)==2:
+            strings.append( i[0] + ';' + str(i[1]) )
+
+    for i in strings: ## строки добавляются в конец файла
+        f.write(i + '\n')
+    f.close()
+
+
+##### copying file to array
+def read_file(file):
+    f = open('test_records.txt')
+    str_list=f.read().split('\n')
+    read=[]
+    for i in str_list:
+        if ';' in i:
+            spl=i.split(';')
+            read.append([spl[0], int(spl[1])])
+
+    # print(read)
+
+    f.close()
+
+    return read
+
+
+##### adding record to array
+def adding_record(array, record):
+    if len(array)==0: ## если список пустой
+        array.append(record)
+    else:
+        for i in range(len(array)): 
+            if array[i][1]<record[1]:  ## если есть рекорд меньше
+                array.insert(i, record)
+                break
+        else:
+            if len(array)<10: ##  если нет рекордов меньше но есть место в списке
+                array.append(record)
 
 
 
+    if len(array)==11:
+        array=array[:-1]
+
+    return array
+
+
+
+
+
+########### MENU ##########################################################################
 
 
 
