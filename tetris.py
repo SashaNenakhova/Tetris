@@ -758,7 +758,7 @@ def start_menu(screen):
                 highscore = play_tetris(screen)
 
                 if highscore == True:
-                    display_results(screen, position)
+                    display_results(screen)
                 
 
             else: # top results
