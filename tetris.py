@@ -295,7 +295,7 @@ def play_tetris(stdscr):
         y = 5
 
         global count_lines
-        count_lines=10 ################################
+        count_lines=0 ################################
 
         global next_figure
         current_figure=figures[random.randint(0, len(figures)-1)]
@@ -442,7 +442,7 @@ def play_tetris(stdscr):
                                         stdscr.refresh()
                                         stdscr.nodelay(True) 
                                         ### добавление рекорда
-                                        ttop=adding_record(ttop, [name, count_lines])
+                                        ttop=adding_record(ttop, [name, count_lines]) ################
                                         update_file(ttop)
                                         record_flag=False
                                         stdscr.clear()
@@ -465,7 +465,7 @@ def play_tetris(stdscr):
                                     
 
 
-                               
+
 
 
 
