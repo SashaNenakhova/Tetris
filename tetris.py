@@ -21,9 +21,46 @@ def create_borders(m):
     return matrix
 
 
+def has_screen_changed(screen):
+    # Функция проверяет, изменился ли размер экрана, и, если да, очищает экран. 
+    # Вызывающие функции должны подразумевать, что экран может быть очищен после вызова этой функции
+
+    curses.init_pair(50, 15, 9) # game over
+
+    global screen_dimensions
+    current_dimensions = screen.getmaxyx()
+
+    while screen.getmaxyx()[0]<30 or screen.getmaxyx()[1]<55:
+        key=screen.getch()
+        if key==ord('q'):
+            screen.clear()
+            exit(0)
+
+        if screen_dimensions != current_dimensions:
+            screen_dimensions = current_dimensions
+            screen.clear()
+
+            
+        if screen.getmaxyx()[0]<30 or screen.getmaxyx()[1]<55:
+            screen.move(screen.getmaxyx()[0]//2, screen.getmaxyx()[1]//2-9)
+            screen.addstr('Terminal too small', curses.color_pair(50))
+        elif screen.getmaxyx()[0]<3 or screen.getmaxyx()[1]<20:
+            screen.move(screen.getmaxyx()[0]//2, screen.getmaxyx()[1]//2-3)
+            screen.addstr('Error', curses.color_pair(50))
+        else:
+            screen.addstr(0, 0, ' ')
 
 
-def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
+        current_dimensions=screen.getmaxyx()
+        screen.refresh()
+
+    if screen_dimensions != current_dimensions:
+        screen_dimensions = current_dimensions
+        screen.clear()
+
+
+
+def render_tetris(sdr, m, current_figure, x, y): # copy matrix + figure
     global next_figure
     global count_lines
     global screen_dimensions
@@ -34,135 +71,111 @@ def render_scene(sdr, m, current_figure, x, y): # copy matrix + figure
     stdscr.move(0,0)
 
     stdscr.addstr(1, 0, str(screen_dimensions))
+
     has_screen_changed(stdscr)
 
     stdscr.addstr(3, 0, str(ttop))####################################### -----------------------------------------------------------------------------
 
-    if screen_dimensions[0]<23 or screen_dimensions[1]<55:
-        stdscr.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
-        stdscr.addstr('Error', curses.color_pair(50))
-    else:
+    # if screen_dimensions[0]<23 or screen_dimensions[1]<55:
+    #     stdscr.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
+    #     stdscr.addstr('Error', curses.color_pair(50))
+    # else:
 
-        left_corner = (screen_dimensions[1])//2 - 36
-        top_corner = (screen_dimensions[0])//2 - 14
-
-
-        scene = copy.deepcopy(m)
+    left_corner = (screen_dimensions[1])//2 - 36
+    top_corner = (screen_dimensions[0])//2 - 14
 
 
-        # copying figure into scene
-        for i in range(len(current_figure)): 
-            for j in range(len(current_figure[i])):
-                if current_figure[i][j]!=0:
-                    scene[x+i][y+j] = current_figure[i][j]
+    scene = copy.deepcopy(m)
+
+
+    # copying figure into scene
+    for i in range(len(current_figure)): 
+        for j in range(len(current_figure[i])):
+            if current_figure[i][j]!=0:
+                scene[x+i][y+j] = current_figure[i][j]
+
 
 
     
-        
 
-        curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_BLACK)
-        curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_WHITE)
-        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLUE)
-        curses.init_pair(3, curses.COLOR_CYAN, curses.COLOR_CYAN)
-        curses.init_pair(4, 11, 11)
-        curses.init_pair(5, curses.COLOR_RED, curses.COLOR_RED)
-        curses.init_pair(6, curses.COLOR_GREEN, curses.COLOR_GREEN)
-        curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(12, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(14, 126, 126)
-        curses.init_pair(15, 154, 154)
+    curses.init_pair(10, curses.COLOR_BLACK, curses.COLOR_BLACK)
+    curses.init_pair(1, curses.COLOR_WHITE, curses.COLOR_WHITE)
+    curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLUE)
+    curses.init_pair(3, curses.COLOR_CYAN, curses.COLOR_CYAN)
+    curses.init_pair(4, 11, 11)
+    curses.init_pair(5, curses.COLOR_RED, curses.COLOR_RED)
+    curses.init_pair(6, curses.COLOR_GREEN, curses.COLOR_GREEN)
+    curses.init_pair(11, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    curses.init_pair(12, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+    curses.init_pair(14, 126, 126)
+    curses.init_pair(15, 154, 154)
 
 
-        curses.init_pair(13, curses.COLOR_BLACK, 8) # pause
-        curses.init_pair(50, 15, 9) # game over
+    curses.init_pair(13, curses.COLOR_BLACK, 8) # pause
+    curses.init_pair(50, 15, 9) # game over
 
-        #drawing the scene
-        for i in range(len(scene)):
-            for j in range(len(scene[i])):
+    #drawing the scene
+    for i in range(len(scene)):
+        for j in range(len(scene[i])):
 
-                    stdscr.move(top_corner+5+i, left_corner+10+j*2)
-                    if scene[i][j]==1:
-                        stdscr.addstr('  ', curses.color_pair(1))
-                    elif scene[i][j]==2:
-                        stdscr.addstr('  ', curses.color_pair(2))
-                    elif scene[i][j]==3:
-                        stdscr.addstr('  ', curses.color_pair(3))
-                    elif scene[i][j]==4:
-                        stdscr.addstr('  ', curses.color_pair(4))
-                    elif scene[i][j]==5:
-                        stdscr.addstr('  ', curses.color_pair(5))
-                    elif scene[i][j]==6:
-                        stdscr.addstr('  ', curses.color_pair(6))
-                    elif scene[i][j]==7:
-                        stdscr.addstr('  ', curses.color_pair(14))
-                    elif scene[i][j]==8:
-                        stdscr.addstr('  ', curses.color_pair(15))
-                    else:
-                        stdscr.addstr('  ', curses.color_pair(10))
+                stdscr.move(top_corner+5+i, left_corner+10+j*2)
+                if scene[i][j]==1:
+                    stdscr.addstr('  ', curses.color_pair(1))
+                elif scene[i][j]==2:
+                    stdscr.addstr('  ', curses.color_pair(2))
+                elif scene[i][j]==3:
+                    stdscr.addstr('  ', curses.color_pair(3))
+                elif scene[i][j]==4:
+                    stdscr.addstr('  ', curses.color_pair(4))
+                elif scene[i][j]==5:
+                    stdscr.addstr('  ', curses.color_pair(5))
+                elif scene[i][j]==6:
+                    stdscr.addstr('  ', curses.color_pair(6))
+                elif scene[i][j]==7:
+                    stdscr.addstr('  ', curses.color_pair(14))
+                elif scene[i][j]==8:
+                    stdscr.addstr('  ', curses.color_pair(15))
+                else:
+                    stdscr.addstr('  ', curses.color_pair(10))
 
-        # next figure
-        stdscr.move(top_corner+5, left_corner+50)
-        stdscr.addstr('Next figure: ', curses.color_pair(12))
+    # next figure
+    stdscr.move(top_corner+5, left_corner+50)
+    stdscr.addstr('Next figure: ', curses.color_pair(12))
 
-        for i in range(4): 
-            for j in range(4):
+    for i in range(4): 
+        for j in range(4):
+            stdscr.move(top_corner+8+i, left_corner+53+j*2)
+            stdscr.addstr('  ', curses.color_pair(10))
+            
+    for i in range(len(next_figure)): 
+        for j in range(len(next_figure[i])):
                 stdscr.move(top_corner+8+i, left_corner+53+j*2)
-                stdscr.addstr('  ', curses.color_pair(10))
-                
-        for i in range(len(next_figure)): 
-            for j in range(len(next_figure[i])):
-                    stdscr.move(top_corner+8+i, left_corner+53+j*2)
-                    if next_figure[i][j]==1:
-                        stdscr.addstr('  ', curses.color_pair(1))
-                    elif next_figure[i][j]==2:
-                        stdscr.addstr('  ', curses.color_pair(2))
-                    elif next_figure[i][j]==3:
-                        stdscr.addstr('  ', curses.color_pair(3))
-                    elif next_figure[i][j]==4:
-                        stdscr.addstr('  ', curses.color_pair(4))
-                    elif next_figure[i][j]==5:
-                        stdscr.addstr('  ', curses.color_pair(5))
-                    elif next_figure[i][j]==6:
-                        stdscr.addstr('  ', curses.color_pair(6))
-                    elif next_figure[i][j]==7:
-                        stdscr.addstr('  ', curses.color_pair(14))
-                    elif next_figure[i][j]==8:
-                        stdscr.addstr('  ', curses.color_pair(15))
-                    else:
-                        stdscr.addstr('  ', curses.color_pair(10))
+                if next_figure[i][j]==1:
+                    stdscr.addstr('  ', curses.color_pair(1))
+                elif next_figure[i][j]==2:
+                    stdscr.addstr('  ', curses.color_pair(2))
+                elif next_figure[i][j]==3:
+                    stdscr.addstr('  ', curses.color_pair(3))
+                elif next_figure[i][j]==4:
+                    stdscr.addstr('  ', curses.color_pair(4))
+                elif next_figure[i][j]==5:
+                    stdscr.addstr('  ', curses.color_pair(5))
+                elif next_figure[i][j]==6:
+                    stdscr.addstr('  ', curses.color_pair(6))
+                elif next_figure[i][j]==7:
+                    stdscr.addstr('  ', curses.color_pair(14))
+                elif next_figure[i][j]==8:
+                    stdscr.addstr('  ', curses.color_pair(15))
+                else:
+                    stdscr.addstr('  ', curses.color_pair(10))
 
-        # lines
-        stdscr.move(top_corner+15, left_corner+52)
-        stdscr.addstr('Lines: '+str(count_lines), curses.color_pair(11))
+    # lines
+    stdscr.move(top_corner+15, left_corner+52)
+    stdscr.addstr('Lines: '+str(count_lines), curses.color_pair(11))
 
 
 
     stdscr.refresh()
-
-
-
-
-
-
-
-def has_screen_changed(screen):
-    # Функция проверяет, изменился ли размер экрана, и, если да, очищает экран. 
-    # Вызывающие функции должны подразумевать, что экран может быть очищен после вызова этой функции
-
-    global screen_dimensions
-
-    current_dimensions = screen.getmaxyx()
-
-    if screen_dimensions != current_dimensions:
-        screen_dimensions = current_dimensions
-        screen.clear()
-
-    while screen.getmaxyx()[0]<23 or screen.getmaxyx()[1]<55:
-        screen.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
-        screen.addstr('Error', curses.color_pair(50))
-        screen.refresh()
-
-
 
 
 
@@ -252,7 +265,6 @@ def play_tetris(stdscr):
     global current_terminal_size
     global speed
     global screen_dimensions
-
     stdscr.clear()
 
     nodelay=True
@@ -481,7 +493,7 @@ def play_tetris(stdscr):
                     break
 
 
-            render_scene(stdscr, matrix, current_figure, x, y)
+            render_tetris(stdscr, matrix, current_figure, x, y)
 
         if quit==True:
             quit=False
@@ -509,39 +521,6 @@ def play_tetris(stdscr):
 
 
     stdscr.nodelay(True)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -651,7 +630,6 @@ def display_results(screen_results):
     global ttop
     global screen_dimensions
 
-    has_screen_changed(screen_results)
 
     left_corner = (screen_dimensions[1]) // 2 - 10
     top_corner = (screen_dimensions[0]) // 2 - 23
@@ -721,6 +699,9 @@ def render_menu(num, lst, screen):
 def start_menu(screen):
     global screen_dimensions
     global ttop
+
+    for i in range(100):
+        print('')
 
     ttop=read_file()                                                                             ##############
 
