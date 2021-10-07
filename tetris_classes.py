@@ -39,6 +39,8 @@ class Tetris:
     scene = ''
     menu_lst=['    TETRIS', 'Start new game', ' Top results  ', '     Exit     ']
     menu_item=1
+    records_lst=[' Back ', ' Clear results ']
+    records_item=0
 
     # create glass
     def __init__(self):
@@ -205,6 +207,31 @@ class Tetris:
     ### draw records
     def draw_records(self):
         pass
+    # global screen_dimensions
+    # global ttop
+    
+    # has_screen_changed(screen_results)
+    
+    # left_corner = (screen_dimensions[1]) // 2 - 14
+    # top_corner = (screen_dimensions[0]) // 2 - 12
+
+    # screen_results.addstr(top_corner, left_corner+8, '  Top results')
+
+    # # выводим список рекордов
+    # for i in range(1, len(ttop)+1):
+    #     j=i-1
+    #     screen_results.addstr(top_corner+2*i, left_corner+2, str(i)+' '+ttop[j][0])
+    #     screen_results.addstr(top_corner+2*i, left_corner+4+len(ttop[j][0])-1+len(str(j)), '-'*((24-len(ttop[j][0])+1-len(str(j)))+3))
+    #     screen_results.addstr(top_corner+2*i, left_corner+4+24+3-len(str(ttop[j][1])), str(ttop[j][1]))
+    # # back, clear results 
+    # for i in range(2):
+    #     if res_num==i:
+    #         # выбранная кнопка
+    #         screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i], curses.color_pair(112))
+    #     else:
+    #         screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i])
+
+    # screen_results.refresh()
 
 
 
@@ -397,12 +424,29 @@ class Tetris:
                 elif self.menu_item==1:     # start
                     self.screen.clear()
                     self.scene='game' 
-                else:           # top results
+                else:                        # top results
                     self.screen.clear()
                     self.scene='records'
 
         elif self.scene == 'records':
-            pass
+
+            if key==curses.KEY_RIGHT:
+                self.records_item+=1
+            elif key==curses.KEY_LEFT:
+                self.records_item-=1
+            elif key == curses.KEY_ENTER or key == 10 or key == 13:
+                if self.records_item==0: # back to menu
+                    self.screen.clear()
+                    self.scene='menu'
+                elif self.records_item==1: # clear records
+                    self.screen.clear()
+                    ### ... clear records file!!!!!
+
+            if self.records_item==-1:
+                self.records_item=1
+            elif self.records_item==2:
+                self.records_item=0
+
 
         
 
