@@ -29,7 +29,7 @@ class Tetris:
               [0,8,8]] 
               ]
     x = 0 # up, down
-    y = 0 # left, right
+    y = 5 # left, right
 
     current_figure=figures[random.randint(0, 6)]
     next_figure=figures[random.randint(0, 6)]
@@ -41,6 +41,7 @@ class Tetris:
     menu_item=1
     records_lst=[' Back ', ' Clear results ']
     records_item=0
+    new_name=''
 
     # create glass
     def __init__(self):
@@ -66,6 +67,31 @@ class Tetris:
         self.timer = datetime.datetime.now()
         self.count_lines = 0
         self.speed = 500000
+        self.records_top=self.read_file()
+
+    # new game
+    def initiation(self):
+        self.x=0
+        self.y=5
+        self.current_figure=self.figures[random.randint(0, 6)]
+        self.next_figure=self.figures[random.randint(0, 6)]
+        self.timer = datetime.datetime.now()
+        self.count_lines = 0
+        self.speed = 500000
+        self.glass = [[0 for x in range(12)] for x in range(20)]
+        # create borders
+        for i in range(len(self.glass)):
+
+            if i<=18:
+
+                for j in range(len(self.glass[i])):
+                    if j==0 or j==11:
+                        self.glass[i][j]=1
+
+            else:
+                for j in range(len(self.glass[i])):
+                    self.glass[i][j]=1
+
 
     ### screen
     def has_screen_changed(self):
@@ -111,9 +137,12 @@ class Tetris:
             self.draw_game()
         elif self.scene == 'records':
             self.draw_records()
+        elif self.scene == 'game over':
+            self.draw_game_over()
+        elif self.scene == 'save record':
+            self.draw_saving_record()
 
         self.screen.refresh()
-
 
     ### draw menu
     def draw_menu(self):
@@ -122,7 +151,6 @@ class Tetris:
                 self.screen.addstr((self.screen.getmaxyx()[0] - 7+i*4) // 2, (self.screen.getmaxyx()[1]-14) // 2, self.menu_lst[i], curses.color_pair(112))
             else:
                 self.screen.addstr((self.screen.getmaxyx()[0] - 7+i*4) // 2, (self.screen.getmaxyx()[1]-14) // 2, self.menu_lst[i])
-
 
     ### draw game
     def draw_game(self):
@@ -206,33 +234,43 @@ class Tetris:
 
     ### draw records
     def draw_records(self):
-        pass
-    # global screen_dimensions
-    # global ttop
-    
-    # has_screen_changed(screen_results)
-    
-    # left_corner = (screen_dimensions[1]) // 2 - 14
-    # top_corner = (screen_dimensions[0]) // 2 - 12
+        self.screen.addstr(self.screen.getmaxyx()[0]//2-12, self.screen.getmaxyx()[1]//2-14+8, '  Top records')
 
-    # screen_results.addstr(top_corner, left_corner+8, '  Top results')
+        ## draw records list
+        for i in range(1, len(self.records_top)+1):
+            j=i-1
+            self.screen.addstr((self.screen.getmaxyx()[0]) // 2 - 12+2*i, (self.screen.getmaxyx()[1]) // 2 - 14+2, str(i)+' '+self.records_top[j][0])
+            self.screen.addstr((self.screen.getmaxyx()[0]) // 2 - 12+2*i, (self.screen.getmaxyx()[1]) // 2 - 14+4+len(self.records_top[j][0])-1+len(str(j)), '-'*((24-len(self.records_top[j][0])+1-len(str(j)))+3))
+            self.screen.addstr((self.screen.getmaxyx()[0]) // 2 - 12+2*i, (self.screen.getmaxyx()[1]) // 2 - 14+4+24+3-len(str(self.records_top[j][1])), str(self.records_top[j][1]))
+       
+        ## draw back, clear records
+        for i in range(2):
+            if self.records_item==i:
+                # выбранная кнопка
+                self.screen.addstr(self.screen.getmaxyx()[0]//2-12+2+len(self.records_top)*2, self.screen.getmaxyx()[1]//2-14+18*i, self.records_lst[i], curses.color_pair(112))
+            else:
+                self.screen.addstr(self.screen.getmaxyx()[0]//2-12+2+len(self.records_top)*2, self.screen.getmaxyx()[1]//2-14+18*i, self.records_lst[i])
 
-    # # выводим список рекордов
-    # for i in range(1, len(ttop)+1):
-    #     j=i-1
-    #     screen_results.addstr(top_corner+2*i, left_corner+2, str(i)+' '+ttop[j][0])
-    #     screen_results.addstr(top_corner+2*i, left_corner+4+len(ttop[j][0])-1+len(str(j)), '-'*((24-len(ttop[j][0])+1-len(str(j)))+3))
-    #     screen_results.addstr(top_corner+2*i, left_corner+4+24+3-len(str(ttop[j][1])), str(ttop[j][1]))
-    # # back, clear results 
-    # for i in range(2):
-    #     if res_num==i:
-    #         # выбранная кнопка
-    #         screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i], curses.color_pair(112))
-    #     else:
-    #         screen_results.addstr(top_corner+2+len(ttop)*2, left_corner+18*i, res_lst[i])
+    ### draw game over
+    def draw_game_over(self):
+        box1 = curses.newwin(6, 21, self.top_corner+10, self.left_corner+28)
+        box1.box()
+        box1.bkgd(' ', curses.color_pair(16))    
 
-    # screen_results.refresh()
+        box1.addstr(1, 6, 'Game over', curses.color_pair(16))
+        box1.addstr(3, 1, 'Type "y" to restart')
+        box1.addstr(4, 3, 'or "n" to quit')
+        box1.refresh()
 
+    ### draw saving record
+    def draw_saving_record(self):
+        box2 = curses.newwin(5, 35, self.top_corner+18, self.left_corner+21)
+        box2.box()
+        box2.bkgd(' ', curses.color_pair(16))    
+        box2.addstr(1, 1, 'You have achieved the high score!', curses.color_pair(16))
+        box2.addstr(3, 1, 'Please, type your name:'+self.new_name, curses.color_pair(16))
+        self.screen.move(self.top_corner+18, self.left_corner+44)
+        box2.refresh()
 
 
 
@@ -267,33 +305,8 @@ class Tetris:
 
         ### game over
         if self.__can_move(self.x, self.y, self.current_figure)==False:
-            self.game_over()
+            self.scene='game over'
 
-
-    ### GAME OVER
-    def game_over(self):
-        box1 = curses.newwin(6, 21, self.top_corner+10, self.left_corner+28)
-        box1.box()
-        box1.bkgd(' ', curses.color_pair(16))    
-
-        box1.addstr(1, 6, 'Game over', curses.color_pair(16))
-        box1.addstr(3, 1, 'Type "y" to restart')
-        box1.addstr(4, 3, 'or "n" to quit')
-        box1.refresh()
-
-        while True:
-            key=self.screen.getch()
-
-            if key==ord('y'):
-                self.screen.clear()
-                self.screen.refresh()
-                self.__init__()
-                break
-            elif key==ord('n') or key==ord('q'):
-                self.screen.clear()
-                self.screen.refresh()
-                sys.exit(0)
-                break
 
     ### can move
     def __can_move(self, new_x, new_y, figure):
@@ -375,7 +388,6 @@ class Tetris:
             else:
                 self.save_figure()
 
-
         elif command=='rotate':
             new_figure=[[0 for _ in range(len(self.current_figure[0]))] for _ in range(len(self.current_figure))]
             for i in range(len(self.current_figure)):
@@ -386,7 +398,7 @@ class Tetris:
                 self.current_figure=new_figure
 
 
-
+    ### get input
     def getinput(self):
         key=self.screen.getch()
 
@@ -423,6 +435,7 @@ class Tetris:
                     sys.exit(0)
                 elif self.menu_item==1:     # start
                     self.screen.clear()
+                    self.initiation()
                     self.scene='game' 
                 else:                        # top results
                     self.screen.clear()
@@ -440,13 +453,105 @@ class Tetris:
                     self.scene='menu'
                 elif self.records_item==1: # clear records
                     self.screen.clear()
-                    ### ... clear records file!!!!!
+                    self.clear_records()
 
             if self.records_item==-1:
                 self.records_item=1
             elif self.records_item==2:
                 self.records_item=0
 
+        elif self.scene == 'game over':
+            # records
+            if len(self.records_top)<10:
+                self.new_name=''
+                self.scene='save record'
+            else:
+                for i in range(len(self.records_top)):
+                    if self.records_top[i][1]<self.count_lines:
+                        self.new_name=''
+                        self.scene='save record'
+
+            if key==ord('y'):
+                self.screen.clear()
+                self.screen.refresh()
+                self.__init__()
+            elif key==ord('n') or key==ord('q'):
+                self.screen.clear()
+                self.screen.refresh()
+                sys.exit(0)
+
+
+        elif self.scene == 'save record':
+           
+            # запись имени
+            if key==curses.KEY_ENTER or key == 10 or key == 13:
+
+                ### добавление рекорда
+                self.add_records([self.new_name, self.count_lines])
+                self.update_file()
+
+                self.screen.clear()
+                self.screen.refresh()
+                self.new_name=''
+                self.scene='records'
+            elif key==curses.KEY_BACKSPACE or key==8 or key==127:
+                self.new_name=self.new_name[:-1]
+            elif 90<=key<=126:
+                if len(self.new_name)<10:
+                    self.new_name+=chr(key)
+
+
+    ### updating file
+    def update_file(self):
+        file = open('records.txt', 'w')
+        strings = []
+        # списки из records_top формируются в список строк
+        for i in self.records_top: 
+            if len(i)==2:
+                strings.append(i[0] + ';' + str(i[1]))
+        # строки добавляются в конец файла
+        for i in strings: 
+            file.write(i+'\n')
+        file.close()
+
+    ### copy file to records_top
+    def read_file(self):
+        read=[]
+        try:
+            file=open('records.txt')
+            str_list=file.read().split('\n')
+            for i in str_list:
+                if ';' in i:
+                    spl=i.split(';')
+                    read.append([spl[0], int(spl[1])])
+        except FileNotFoundError:
+            file = open('records.txt', 'w')
+            file.write('')
+        file.close()
+        return read
+
+    ### add record to records_top
+    def add_records(self, record):
+        if self.records_top==[]:   # если список пустой
+            self.records_top.append(record)
+        else:
+            for i in range(len(self.records_top)):
+                if self.records_top[i][1]<record[1]:  # если есть рекорд меньше
+                    self.records_top.insert(i, record)
+                    break
+            else:
+                if len(self.records_top)<10:  # если нет рекордов меньше но есть место в списке
+                    self.records_top.append(record)
+
+        if len(self.records_top)==11:   # удаление лишних строк
+            self.records_top=self.records_top[:-1]
+
+    ### clear records
+    def clear_records(self):
+        file=open('records.txt', 'w')
+        file.write('')
+        file.close()
+        self.records_top=[]
 
         
 
@@ -479,7 +584,6 @@ def run_game(screen):
     curses.init_pair(112, curses.COLOR_BLACK, curses.COLOR_WHITE) # menu 
 
 
-
     tetris.screen = screen
 
     tetris.x = 0 # up, down
@@ -492,11 +596,9 @@ def run_game(screen):
 
     while True:
 
-
         tetris.getinput()
 
         key=screen.getch()
-
 
         tetris.draw()
         tetris.tick()

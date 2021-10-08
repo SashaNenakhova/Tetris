@@ -65,7 +65,7 @@ def render_tetris(sdr, m, current_figure, x, y): # copy matrix + figure
     global count_lines
     global screen_dimensions
 
-    global ttop ########################################### --------------------------------------------------------------------------------
+    global ttop
 
     stdscr=sdr
     stdscr.move(0,0)
@@ -74,12 +74,7 @@ def render_tetris(sdr, m, current_figure, x, y): # copy matrix + figure
 
     has_screen_changed(stdscr)
 
-    stdscr.addstr(3, 0, str(ttop))####################################### -----------------------------------------------------------------------------
-
-    # if screen_dimensions[0]<23 or screen_dimensions[1]<55:
-    #     stdscr.move(screen_dimensions[0]//2, screen_dimensions[1]//2)
-    #     stdscr.addstr('Error', curses.color_pair(50))
-    # else:
+    stdscr.addstr(3, 0, str(ttop))
 
     left_corner = (screen_dimensions[1])//2 - 36
     top_corner = (screen_dimensions[0])//2 - 14
@@ -463,7 +458,8 @@ def play_tetris(stdscr):
                                     elif letter==curses.KEY_BACKSPACE or letter==8 or letter==127:
                                         name=name[:-1]
                                     else:
-                                        name+=chr(letter)
+                                        if 65<=letter<=126:
+                                            name+=chr(letter)
                                     box2.addstr(3, 24, ' '*11)
                                     box2.addstr(3, 24, name)
                                     box2.box()
@@ -657,7 +653,7 @@ def display_results(screen_results):
                 screen_results.clear()
                 screen_results.nodelay(True)
                 return
-            elif res_num==1: ######################### clear                                       ##############
+            elif res_num==1: ######################### clear                                 
                 screen_results.clear()
 
                 ttop=clear_records()
@@ -703,7 +699,7 @@ def start_menu(screen):
     for i in range(100):
         print('')
 
-    ttop=read_file()                                                                             ##############
+    ttop=read_file()                                                                           
 
     curses.start_color()
     curses.init_pair(112, curses.COLOR_BLACK, curses.COLOR_WHITE)
